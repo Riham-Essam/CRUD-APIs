@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Students Data</title>
+    <style>
+        #testDataContainer{
+            margin-top: 20px;
+        }
+
+         #addStudentForm{
+            margin-bottom: 20px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+
+    <h2>Students Data</h2>
+
+    <div id="testDataContainer">
+        <!-- Display the data here -->
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: '/api/Students/GetAllAsync/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    displayData(data);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+
+            function displayData(data) {
+                var container = $('#testDataContainer');
+                container.empty();
+
+                // Create and append the form
+                var form = $('<form>').attr('id', 'addStudentForm');
+                form.append(
+                    $('<label>').attr('for', 'studentName').text('Student Name:'),
+                    $('<input>').attr({ type: 'text', id: 'studentName', required: true }),
+                    $('<button>').attr('type', 'submit').text('Add')
+                );
+                container.append(form);
+
+                // Create a table element
+                var table = $('<table>').addClass('table');
+
+                // Create and append the table header
+                var tableHeader = $('<thead>').append(
+                    $('<tr>').append(
+                        $('<th>').text('ID'),
+                        $('<th>').text('Name'),
+                        $('<th>').text('Activated'),
+                        $('<th>').text('Actions')  // New column for delete buttons
+                    )
+                );
+                table.append(tableHeader);
+
+                // Create and append table rows with data and delete buttons
+                var tableBody = $('<tbody>');
+                $.each(data, function (index, item) {
+                    var row = $('<tr>').append(
+                        $('<td>').text(item.id),
+                        $('<td>').text(item.name),
+                        $('<td>').text(item.activated),
+                        $('<td>').append(
+                            $('<button>').text('Delete').attr('data-Id', item.id).click(deleteItem)
+                        )
+                    );
+                    tableBody.append(row);
+                });
+                table.append(tableBody);
+
+                // Append the table to the container
+                container.append(table);
+                            
+
+                // Submit form event handler
+                $('#addStudentForm').submit(function (event) {
+                    event.preventDefault();
+
+                    var formData = {
+                        Name: $('#studentName').val(),
+                        Activated: true
+                    };
+
+                    $.ajax({
+                        url: '/api/Students/CreateAsync/',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(formData),
+                        success: function (result) {
+                            // Handle success (e.g., refresh the data)
+                            console.log('Item added successfully');
+                            location.reload();
+                        },
+                        error: function (error) {
+                            console.log(error);
+                        }
+                    });
+                });
+            }
+
+            function deleteItem() {
+                var itemId = $(this).data('id');
+
+                // Perform AJAX call to delete endpoint with the itemId
+                $.ajax({
+                    url: '/api/Students/DeleteAsync/' + itemId,
+                    type: 'DELETE',
+                    success: function (result) {
+                        // Handle success (e.g., refresh the data)
+                        console.log('Item deleted successfully');
+                        location.reload();
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
